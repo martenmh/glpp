@@ -26,55 +26,107 @@ Mesh plane(const ml::vec3& pos, const ml::vec2& size, rgba color, float textureI
 }
 
 class Animation{
+  public:
+    using AnimationCallback = ml::mat4 (*)(ml::mat4& transformation, float dx);
+
+	/* Duration in seconds */
+	float duration = INFINITY;
+	Shape& shapeRef;
+    AnimationCallback callback;
+
 	void operator()(float dx){
-
+		callback(shapeRef.transformation, callback);
 	}
 };
 
-class MathRenderer : protected Renderer {
-	void draw(){
+Animation rotateAnimation(Shape& shape, float duration = INFINITY){
+    return Animation(duration, shape, [](ml::mat4& transformation, float dx){
+        ml::rotate(dx, {1.0f, 0.0f, 0.0f});
+	});
+}
 
-	}
-    void draw(ml::vec2 vec){
-
-    }
-
-	void play(Animation anim){
-		float dx = 0.0f;
-		do {
-            anim(dx);
-		} while(anim.duration < dx)
-
-	}
+class Shape {
+	ml::mat4 transformation;
 };
 
-class Shapes {
+class Triangle : protected Shape {
 
 };
 
-class Triangle : protected Shapes {
-
-};
-class Square : protected Shapes {
+class Square : protected Shape {
 
 };
 
-struct Circle : protected Shapes {
-	ml::vec3 position;
+struct Circle : protected Shape {
+	ml::vec3 center;
 	float radius;
-    ml::vec3 getCenter(){
-
-	}
-	ml::vec3 getRadius(){
-
-	}
 };
 
-class Line : protected Shapes {
+class Line : protected Shape {
     ml::vec3 start, end;
 
 };
 
+class LengthLine : public Line {
+
+};
+
+class Brace : public Line {
+
+};
+
+class Arrow : public Line {
+
+};
+
+class Angle : Shape {
+
+};
+
+
+
+/**
+ * 2-Dimensional Scene
+ */
+class Scene : protected Renderer {
+    std::vector<Shape> shapes;
+
+    void render() {
+		
+        Renderer::draw()
+    }
+    void play(){
+        float dx = 0.0f;
+        do {
+            anim(dx);
+        } while(anim.duration < dx);
+
+    }
+
+	/**
+	 * Wait on an animation
+	 */
+	void wait(){
+        Animation currentAnimation;
+		if(currentAnimation.duration == INFINITY){
+
+		}
+	}
+    virtual void setup() {
+
+    }
+};
+
+class MyScene : public Scene {
+
+    void setup() override {
+        auto myCircle = Circle{.center = {0.0f, 0.0f}, .radius = 1.0f};
+		this->shapes.push_back(myCircle);
+
+		auto myCircleAnimation = rotateAnimation(myCircle, 5.0f);
+		this->play(myCircleAnimation);
+	}
+};
 
 
 int main() {
@@ -85,7 +137,7 @@ int main() {
 
     ml::mat4 projection(1), view(1), model(1);
 
-    RenderWindow<MathRenderer> window(width, height, "Engine", 5.0f, 5.0f, arr);
+    RenderWindow<MyScene> window(width, height, "Engine");
     Shader                        shader("/home/marten/projects/glpp/resources/default/shaders/mvp/");
     Camera                        camera(100, 100);
 
@@ -95,6 +147,7 @@ int main() {
     int i = 0;
     bool show_demo_window = true;
 
+    window.setup();
     while(window.isOpen()) {
         window.pollEvents();
         window.clear({0.05f, 0.05f, 0.05f, 1.0f});
@@ -107,8 +160,8 @@ int main() {
 
         model = ml::scale(0.4f);
 
-
-        window.display();
+        window.update();
+        window.render();
     }
     return 0;
 }

@@ -25,13 +25,12 @@ namespace glpp {
     * 	Meshes can be created from a file or from builtin classes
     */
 	class Mesh {
-		unsigned int VBO, VAO, EBO;
+		unsigned int VBO{}, VAO{}, EBO{};
 
 	  public:
 		std::vector<Vertex>  vertices;
 		std::vector<Index>   indices;
 		std::vector<Texture> textures;
-		ml::mat4             transformation;
 
 		ml::vec3 center();
 
@@ -41,7 +40,56 @@ namespace glpp {
 		void setTexture(const Texture& texture) {
 			textures.push_back(texture);
 		}
-		Mesh(std::vector<Vertex> vertices, std::vector<Index> indices, std::vector<Texture> textures) {
+
+		void setColor(rgba color){
+			for(auto& vertex : vertices){
+				vertex.color = color;
+			}
+		}
+
+		/**
+		 * Default constructor
+		 * Leaves the object in a unusable state
+		 */
+		Mesh()= default;
+
+        Mesh(const Mesh& mesh){
+			VAO = mesh.VAO;
+			VBO = mesh.VBO;
+			EBO = mesh.EBO;
+            vertices = mesh.vertices;
+            indices = mesh.indices;
+            textures = mesh.textures;
+		}
+
+        Mesh(Mesh&& mesh) noexcept {
+            VAO = mesh.VAO;
+            VBO = mesh.VBO;
+            EBO = mesh.EBO;
+            vertices = std::move(mesh.vertices);
+            indices = std::move(mesh.indices);
+            textures = std::move(mesh.textures);
+        }
+
+        Mesh& operator=(const Mesh& mesh){
+            VAO = mesh.VAO;
+            VBO = mesh.VBO;
+            EBO = mesh.EBO;
+            vertices = mesh.vertices;
+            indices = mesh.indices;
+            textures = mesh.textures;
+		}
+
+        Mesh& operator=(Mesh&& mesh) noexcept {
+            VAO = mesh.VAO;
+            VBO = mesh.VBO;
+            EBO = mesh.EBO;
+            vertices = std::move(mesh.vertices);
+            indices = std::move(mesh.indices);
+            textures = std::move(mesh.textures);
+        }
+
+        Mesh(std::vector<Vertex> vertices, std::vector<Index> indices, std::vector<Texture> textures) {
 			this->vertices = std::move(vertices);
 			this->indices  = std::move(indices);
 			this->textures = std::move(textures);
@@ -73,6 +121,9 @@ namespace glpp {
 
 		void draw(Shader& shader);
 
+        bool operator==(const Mesh& rhs) const{
+			return VBO == rhs.VBO && VAO == rhs.VAO && EBO == rhs.EBO;
+		}
 	  private:
 		void genBuffers();
 		void loadFromFile(const std::filesystem::path& path) {
@@ -194,7 +245,7 @@ namespace glpp {
         }
         void draw(Mesh& mesh) {
             mesh.bind();
-			glASSERT(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+			glASSERT(glDrawElements(GL_TRIANGLES, mesh.indicesSize(), GL_UNSIGNED_INT, 0));
         }
         void draw(VertexMesh& mesh) {
             mesh.bind();

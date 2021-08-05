@@ -31,7 +31,7 @@ namespace glpp {
 					  std::vector<Vertex>& vertices, std::vector<Index>& indices);
 
 	/* Creators that create new vertices and indices */
-	VertexIndexPair createPlane(const ml::vec3& pos, const ml::vec2& size, rgba color, float textureID);
+	VertexIndexPair createPlane(const ml::vec3& center, const ml::vec2& size, rgba color, float textureID);
 	VertexIndexPair createLine(const ml::vec3& from, const ml::vec3& to, float thickness);
 	VertexIndexPair createCircle(const ml::vec3& center, float radius, int segments);
 	VertexIndexPair createUVSphere(const ml::vec3& center, float radius, int stacks, int segments, int texSlot);
@@ -248,6 +248,7 @@ namespace glpp {
 										 {{from.x() - thickness, from.y() - thickness, from.z()}, color, {}, {1.0f, 1.0f}, 0.0f}});
 		indices.insert(indices.end(), {maxI + 0, maxI + 1, maxI + 2, maxI + 2, maxI + 0, maxI + 3});
 	}
+
 	void createCircle(const ml::vec3& center, float radius, int segments, std::vector<Vertex>& vertices, std::vector<Index>& indices) {
 		rgba  col{1.0f, 1.0f, 1.0f, 1.0f};
 		Index maxI = maxIndex(indices);
@@ -273,6 +274,22 @@ namespace glpp {
 		createCircle(center, radius, segments, vertices, indices);
 		return {vertices, indices};
 	}
+
+	Mesh createTriangle(const ml::vec3& A, const ml::vec3& B, const ml::vec3& C, rgba color, float textureID = 0.0f){
+        return Mesh(VertexIndexPair{{{{A.x(), A.y(), A.z()}, color, {}, {0.0f, 0.0f}, textureID},
+                            {{B.x(), B.y(), B.z()}, color, {}, {1.0f, 0.0f}, textureID},
+                               {{C.x(), C.y(), C.z()}, color, {}, {0.5f, 1.0f}, textureID}},
+                        {0, 1, 2}});
+	}
+
+    Mesh createPlane2(const ml::vec3& center, const ml::vec2& size, rgba color, float textureID) {
+        return Mesh(VertexIndexPair({
+                                {{center.x() - size.x(), center.y() - size.y(), center.z()}, color, {}, {0.0f, 0.0f}, textureID},
+                                {{center.x() + size.x(), center.y() - size.y(), center.z()}, color, {}, {1.0f, 0.0f}, textureID},
+                                {{center.x() - size.x(), center.y() + size.y(), center.z()}, color, {}, {0.0f, 1.0f}, textureID},
+                                {{center.x() + size.x(), center.y() + size.y(), center.z()}, color, {}, {1.0f, 1.0f}, textureID}},
+                               {0, 1, 2, 2, 1, 3}));
+    }
 
 	VertexIndexPair createICOSphere(const ml::vec3& center, float radius, int stacks, int segments, int texSlot) {
 	}
