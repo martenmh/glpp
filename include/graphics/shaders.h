@@ -23,8 +23,8 @@
 
 namespace glpp {
 	/**
- * ShaderData structure, contains all necessary data for each shader
- */
+    * ShaderData structure, contains all necessary data for each shader
+    */
 	struct ShaderData {
 		GLuint      ID = 0; // todo make ID private
 		std::string source;
@@ -62,6 +62,14 @@ namespace glpp {
 		void parseUniforms();
 
 	  public:
+		/**
+		 * Replace custom macro's with another string
+		 * Based on "#MACRO ARG" format
+		 * @param macro The macro header #MACRO
+		 * @param replacer A replacer function that replaces text based on the incoming macro ARG
+		 */
+		void replaceMacros(const std::string& macro, std::string (*replacer)(std::string arg));
+
 		Shader() = default;
 		explicit Shader(std::filesystem::path directory);
 		explicit Shader(const std::vector<ShaderData>& shaders);

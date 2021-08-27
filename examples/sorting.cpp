@@ -239,7 +239,7 @@ int main() {
         std::cout << value << std::endl;
     }
     RenderWindow<SortingRenderer> window(width, height, "Engine", 5.0f, 5.0f, arr);
-    Shader                        shader("/home/marten/projects/glpp/resources/default/shaders/mvp/");
+    Shader                        shader("/home/marten/projects/glpp/resources/default/shaders/scene_shaders/");
     Camera                        camera(100, 100);
 
     // Setup Dear ImGui context
@@ -288,7 +288,7 @@ int main() {
         //		view       = camera.view();
         //		projection = ml::ortho(0.0f, 10.0f, 0.0f, 10.0f, 0.1f, 100.0f);
 
-        shader.setUniform("mvp", projection * view * model);
+        shader.setUniform("scene_shaders", projection * view * model);
         shader.use();
 //        std::cout  << "si: " << (glfwGetTime() - startTime) << ", " << startTime << ", " << i << std::endl;
 //        std::cout << "si: " << startTime << ", " << i << std::endl;

@@ -250,7 +250,8 @@ GLFW_RAW_MOUSE_MOTION
 		inline static signal<void(ScrollEvent)>     onMouseScroll;
 		inline static signal<void(MouseClickEvent)> onMouseClick;
 		inline static signal<void(MouseMoveEvent)>  onMouseMove;
-		inline static signal<void(ResizeEvent)>     onResize;
+        inline static signal<void(ResizeEvent)>     onFramebufferResize;
+		inline static signal<void(ResizeEvent)>     onWindowResize;
 	};
 
 	class Window;

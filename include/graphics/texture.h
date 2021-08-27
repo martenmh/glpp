@@ -56,9 +56,41 @@ namespace glpp {
 						 TextureWrap yWrap = TextureWrap::Repeat, TextureFilter filter = TextureFilter::Smooth,
 						 bool useMipmap = true, TextureFilter mipmapFilter = TextureFilter::Smooth);
 
+		// Delete the copy constructor/assignment
+        Texture(const Texture &) = delete;
+        Texture &operator=(const Texture&) = delete;
+
+		Texture(Texture&& other)  noexcept : m_rendererID(other.m_rendererID){
+            other.m_rendererID = 0;
+			xWrap = other.xWrap;
+			yWrap = other.yWrap;
+            m_slot = other.m_slot;
+            type = other.type;
+			useMipmap = other.useMipmap;
+		}
+
+		void release(){
+            glDeleteTextures(1, &m_rendererID);
+            m_rendererID = 0;
+		}
+
+        Texture& operator=(Texture&& other) {
+			if(this != &other) {
+				release();
+				m_rendererID = other.m_rendererID;
+				other.m_rendererID = 0;
+				xWrap              = other.xWrap;
+				yWrap              = other.yWrap;
+				m_slot             = other.m_slot;
+				type               = other.type;
+				useMipmap          = other.useMipmap;
+			}
+        }
+
 		~Texture();
+
 		void         resize(int height, int width);
-		unsigned int getID() { return m_rendererID; }
+		unsigned int getID() const { return m_rendererID; }
 
 		void         setSlot(unsigned int slot) { m_slot = slot; }
 		unsigned int getSlot() { return m_slot; }
@@ -121,9 +153,7 @@ namespace glpp {
 		glActiveTexture(GL_TEXTURE0 + m_slot); // Specify texture slot
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
-	Texture::~Texture() {
-		glDeleteTextures(1, &m_rendererID);
-	}
+	Texture::~Texture() { release(); }
 	void Texture::resize(int height, int width) {
 		//stbir_resize_uint8()
 	}

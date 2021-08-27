@@ -1,5 +1,6 @@
 #include "glm/glm.hpp"
 #include "graphics/camera.h"
+
 #include "graphics/font.h"
 #include "graphics/mesh.h"
 #include "graphics/shaders.h"
@@ -9,11 +10,55 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#include "plotting/coordinates.h"
+
+
 #include <iostream>
 #include <list>
 #include <random>
 
+#include "animation.h"
+#include "shape.h"
+#include "scene.h"
+
 using namespace glpp;
+
+class Function {
+	bool show = true;
+	std::string expression;
+	float operator()(float x) {}
+};
+
+/**
+ * Simple recursive descent parser that parses into a walkable tree
+ */
+class ExpressionParser {
+	std::vector<Function> functions;
+	/**
+	 * A walkable tree to
+	 */
+	class AST {
+	    class Node{
+            enum class Op {
+                Assign,
+                Multiply,
+                Divide,
+                Add,
+                Subtract,
+                Power,
+                Negate,
+                Function
+            } operation;
+			std::vector<Node> nodes;
+		};
+		Node root;
+	};
+	ExpressionParser() {
+	}
+
+
+};
+
 
 Mesh plane(const ml::vec3& pos, const ml::vec2& size, rgba color, float textureID = 0.0f) {
 	return Mesh({{{pos.x(), pos.y(), pos.z()}, color, {}, {0.0f, 0.0f}, textureID},
@@ -23,317 +68,481 @@ Mesh plane(const ml::vec3& pos, const ml::vec2& size, rgba color, float textureI
 				{0, 1, 2, 2, 1, 3});
 }
 
-struct Transformable {
-	ml::mat4 transformation;
 
-	void move(const ml::vec3& xyz) {
-		ml::translate(transformation, xyz);
+
+
+std::ostream& operator<<(std::ostream& os, Mesh& mesh){
+    for(auto& vertex : mesh.vertices){
+		os << "Position:" << vertex.positions << std::endl;
+        os << "Normal  : " << vertex.normals << std::endl;
 	}
 
-	void scale(const ml::vec3& xyz) {
-		transformation *= ml::scale(xyz);
-	}
-	void scale(float scale) {
-		transformation *= ml::scale(scale);
-	}
-	void rotate(const ml::vec3& xyz) {
-		transformation *= ml::rotate(1.0f, xyz);
-	}
-};
-
-struct Shape: public ::Transformable {
-	Mesh m_mesh;
-
-  public:
-	/**
-     * Creates the mesh of a shape.
-     * The create function has to be implemented by derivatives.
-     * create() is called when a shape is added to the scene, to lazily evaluate any changes.
-     * @see Scene::add()
-     */
-	virtual void create() = 0;
-
-	/**
-     * Create the Shape Mesh
-     * Should be called by a derived Shape during the create() call
-     * @param mesh
-     * @see create
-     */
-	void create(const Mesh& mesh) {
-		m_mesh = mesh;
-	}
-
-	[[nodiscard]] Mesh& mesh() {
-		return m_mesh;
-	}
-	bool operator==(const Shape& rhs) {
-		return m_mesh == rhs.m_mesh && transformation == rhs.transformation;
-	}
-};
-
-class Animation {
-  protected:
-	using AnimationCallback = void (*)(ml::mat4& transformation, double dx);
-	std::reference_wrapper<Shape> shapeRef;
-	AnimationCallback             callback;
-
-  public:
-	/* Duration in seconds */
-	float duration = INFINITY;
-
-	Animation(float duration, Shape& shape, AnimationCallback callback):
-		shapeRef(shape) {
-		this->duration = duration;
-		this->callback = callback;
-	}
-
-	void operator()(double dx) {
-		callback(shapeRef.get().transformation, dx);
-	}
-	bool operator==(const Animation& rhs) {
-		return this->callback == rhs.callback && this->duration == rhs.duration;
-	}
-};
-
-Animation rotateAnimation(Shape& shape, float duration = INFINITY) {
-	return Animation(duration, shape, [](ml::mat4& transformation, double dx) {
-		transformation *= ml::rotate(static_cast<float>(dx), {1.0f, 0.0f, 0.0f});
-	});
+    for(Index index : mesh.indices){
+        os << index << ", " << std::endl;
+    }
 }
 
-struct Triangle: public Shape {
-	ml::vec3 A = ml::vec3(-1.0f, -1.0f, 0.0f),
-			 B = ml::vec3(0.0f, 1.0f, 0.0f),
-			 C = ml::vec3(1.0f, -1.0f, 0.0f);
 
-    void create() override {
-        Shape::create(Mesh(createTriangle(A, B, C, rgba{0.0f, 0.0f, 1.0f, 1.0f}, 0.0f)));
-    }
-};
-
-struct Rectangle: public Shape {
-    ml::vec3 position = ml::vec3(0.0f);
-    float height = 0.4, width = 0.5;
-
-    void create() override {
-        Shape::create(createPlane2(position, {width, height}, rgba{0.0f, 1.0f, 0.0f, 1.0f}, 0));
-    }
-};
-
-struct Square: public Shape {
-	ml::vec3 position = ml::vec3(0.0f);
-	float size = 1.0f;
-
-    void create() override {
-		Shape::create(createPlane2(position, {size, size}, rgba{1.0f, 0.0f, 0.0f, 1.0f}, 0));
-	}
-};
-
-struct Circle: public Shape {
-	ml::vec3 center = ml::vec3(0.0f);
-	float    radius = 1.0f;
-
-	explicit Circle(const ml::vec3& center = ml::vec3(0.0f), float radius = 1.0f): center(center), radius(radius) {}
-
-	void create() override {
-		Shape::create(Mesh(createCircle(center, radius, static_cast<int>(50 * radius))));
-	}
-};
-
-struct Line: protected Shape {
-	ml::vec3 start, end;
-	void     create() override {
-	}
-	//    Line(const ml::vec3& start, const ml::vec3& end): start(start), end(end){
-	//
-	//	}
-};
-
-//class LengthLine : public Line {
-//
-//};
-//
-//class Brace : public Line {
-//
-//};
-//
-//class Arrow : public Line {
-//
-//};
-
-class Angle: Shape {
-};
-
-
-template <class T, class U>
-concept Derived = std::is_base_of<U, T>::value;
 
 /**
- * 2-Dimensional Scene
+ * Return the first common point and all other points
+ * @tparam N The amount of lines
+ * @param array
+ * @return
  */
-class Scene {
-	static const constexpr auto vertexSource   = R"(
-        #version 410 core
-        layout(location = 0) in vec3 a_Position;
-        layout(location = 1) in vec4 a_Color;
-        out vec4 v_Color;
-
-        uniform mat4 mvp;
-
-        void main(){
-            gl_Position = mvp * vec4(a_Position, 1.0);
-            v_Color = a_Color;
-        }
-    )";
-	static const constexpr auto fragmentSource = R"(
-        #version 410 core
-        out vec4 o_Color;
-        in vec4 v_Color;
-
-        void main(){
-            o_Color = v_Color;
-        }
-    )";
-
-	std::vector<std::unique_ptr<Shape>> shapes;
-	std::vector<Animation>              animations;
-
-  public:
-	Window   window;
-	Shader   shader;
-	Camera   camera;
-	Renderer renderer;
-
-	Scene():
-		window(1920, 1080, "Scene"), shader("/home/marten/projects/glpp/resources/default/shaders/mvp/"), camera(100, 100), renderer() {
-	}
-
-	/**
-	 * Adds a shape to the scene
-	 *
-	 * The mesh of a shape is lazily evaluated,
-	 * such that it does not have to be regenerated for every change before adding it to the scene.
-	 */
-	template<Derived<Shape> T>
-	void add(T& shape) {
-		shape.create();
-		shapes.push_back(std::make_unique<T>(shape));
-	}
-
-    template<Derived<Shape> T, Derived<Shape>... Var>
-    void add(T& shape, Var... args) {
-        add(shape);
-		add(args...);
-    }
-
-	/**
-	 * Remove a shape from the scene
-	 */
-    template<Derived<Shape> T>
-    void remove(T& shape){
-        shapes.erase(std::find(shapes.begin(), shapes.end(), shape));
-	}
-
-    template<Derived<Shape> T, Derived<Shape>... Var>
-    void remove(T& shape, Var... args){
-        shapes.erase(std::find(shapes.begin(), shapes.end(), shape));
-		remove(args...);
-    }
-
-	void render() {
-		//		auto proj = camera.projection();
-		//		auto view = camera.view();
-
-		shader.use();
-		for(auto& shape: shapes) {
-			shader.setUniform("mvp", ml::mat4(1.0f));
-			renderer.draw(shape->mesh());
-		}
-		//        Renderer::draw()
-	}
-
-	void play(Animation animation) {
-		animations.push_back(animation);
-		//        float dx = 0.0f;
-		//        do {
-		//            anim(dx);
-		//        } while(anim.duration < dx);
-	}
-
-    bool update() {
-    }
-
-	/**
-     * Wait on the current animations existing in the buffer
-     * Clears the animation buffer of all finished animations
-     */
-	void wait() {
-		double longestDuration = std::max_element(animations.begin(), animations.end(), [](auto& lhs, auto& rhs) {
-									 return lhs.duration < rhs.duration;
-								 })->duration;
-
-		if(longestDuration == INFINITY)
-			logging::warning("Waiting on an animation that has an infinite duration.");
-
-		double dx        = 0.0;
-		double startTime = glfwGetTime();
-		// render loop
-		do {
-			dx = glfwGetTime() - startTime;
-			for(auto& animation: animations) {
-				animation(dx);
-				if(dx < animation.duration)
-					animations.erase(std::find(animations.begin(), animations.end(), animation));
-				//					animations.erase(animation);
+std::pair<ml::vec3, std::vector<ml::vec3>> splitCommonPoint(std::vector<ml::vec3> points){
+	ml::vec3 commonPoint;
+	for(auto it = points.begin(); it != points.end() - 1; ++it) {
+		for(auto jt = it + 1; jt != points.end(); jt++) {
+		    if(*it == *jt) {
+                commonPoint = *it;
+                points.erase(jt); // erase 'jt' first, as 'it' would shift the 'jt' iterator
+                points.erase(it);
+                return {commonPoint, points};
 			}
-
-			this->render();
-		} while(dx < longestDuration);
-		// remove all finished animations
-		animations.clear();
-	}
-
-	virtual void setup() = 0;
-};
-
-class ai {
-	float d;
-};
-
-struct sss: public ai {
-	int x;
-};
-
-struct MyScene: Scene {
-	void setup() override {
-        auto circle = ::Circle();
-//		add(circle);
-		auto square = ::Square();
-		auto triangle = ::Triangle();
-		auto rectangle = ::Rectangle();
-//		add(square);
-		add(circle, rectangle, triangle);
-        add(triangle);
-//        add(circle);
-//		play(rotateAnimation(circle));
-//		wait();
-	}
-};
-
-int main() {
-	MyScene scene;
-	scene.setup();
-	while(scene.window.isOpen()) {
-		scene.window.pollEvents();
-
-		if(scene.window.keyIsPressed(Key::Q) || scene.window.keyIsPressed(Key::ESCAPE)) {
-			scene.window.close();
 		}
-
-		scene.window.clear({0.05f, 0.05f, 0.05f, 1.0f});
-		scene.update();
-		scene.render();
-		scene.window.display();
-		//		break;
 	}
 }
+
+// Constants
+constexpr const ml::vec3 Origin = {0.0f, 0.0f, 0.0f};
+constexpr const ml::vec3 Left = {-1.0f, 0.0f, 0.0f};
+constexpr const ml::vec3 Right = {1.0f, 0.0f, 0.0f};
+constexpr const ml::vec3 Up = {0.0f, 1.0f, 0.0f};
+constexpr const ml::vec3 Down = {0.0f, -1.0f, 0.0f};
+const rgba Red = rgba(0.851, 0.298, 0.098);
+const rgba Blue = rgba(0.149, 0.349, 0.60);
+const rgba Yellow = rgba(0.949, 0.702, 0.098);
+const rgba Black = rgba(0.0f, 4/255.0f, 1.0f/255.0f);
+const rgba Transparent = rgba(0.0f, 0.0f, 0.0f, 0.0f);
+
+ml::vec3 vertexMedianNormal(const std::array<Line, 2>& lines){
+//    auto [commonVertex, uncommonVertex] = splitCommonPoint(lines);
+//
+//    ml::vec3 l1 = uncommonVertex[0] - commonVertex,
+//        l2 = uncommonVertex[1] - commonVertex;
+//    ml::vec3 midpoint = {(l1.x() + l2.x()) / 2,
+//                         (l1.y() + l2.y()) / 2,
+//                         (l1.z() + l2.z()) / 2};
+//    ml::vec3 unit = midpoint / midpoint.length();
+//    return -unit;
+}
+
+ml::vec3 vertexMedianNormal(ml::vec3 prev, ml::vec3 curr, ml::vec3 next){
+    ml::vec3 l1 = prev - curr,
+        l2 = next - curr;
+    ml::vec3 midpoint = {(l1.x() + l2.x()) / 2,
+                         (l1.y() + l2.y()) / 2,
+                         (l1.z() + l2.z()) / 2};
+    ml::vec3 unit = midpoint / midpoint.length();
+    return -unit;
+}
+
+ml::vec3 vertexMedianNormal(ml::vec3 curr, ml::vec3 next){
+    ml::vec3 l1 = Origin,
+        l2 = next - curr;
+    ml::vec3 midpoint = {(l1.x() + l2.x()) / 2,
+                         (l1.y() + l2.y()) / 2,
+                         (l1.z() + l2.z()) / 2};
+    ml::vec3 unit = midpoint / midpoint.length();
+    return -unit;
+}
+
+
+bool startConnectedToEnd(Mesh& mesh){
+    Index startIndex = 0;
+    Index endIndex = mesh.vertices.size() - 1;
+    bool connected = false, startConnected = false, endConnected = false;
+    for(int i = 0; !connected && i < mesh.indicesSize(); i += 3){
+        startConnected = mesh.indices[i] == startIndex ||
+                         mesh.indices[i + 1] == startIndex ||
+                         mesh.indices[i + 2] == startIndex;
+
+        endConnected = mesh.indices[i] == endIndex ||
+                       mesh.indices[i + 1] == endIndex ||
+                       mesh.indices[i + 2] == endIndex;
+        connected = startConnected & endConnected;
+    }
+    return connected;
+}
+
+/**
+ * Uses the normals to extend any polygon with a border of thickness
+ * @param mesh
+ * @param thickness
+ */
+void addBorder(Mesh& mesh, float thickness){
+    const int meshSize = mesh.vertices.size();
+    bool startConnected = startConnectedToEnd(mesh);
+
+    for(int i = 0; i < meshSize - 1; i++){
+
+        ml::vec3 normal;
+        if(i == 0 && startConnected){
+            normal = vertexMedianNormal(mesh.vertices.back().positions, mesh.vertices[i].positions, mesh.vertices[i + 1].positions);
+        } else if(i == 0){
+            normal = vertexMedianNormal(mesh.vertices[i].positions, mesh.vertices[i + 1].positions);
+        } else {
+            normal = vertexMedianNormal(mesh.vertices[i - 1].positions, mesh.vertices[i].positions, mesh.vertices[i + 1].positions);
+        }
+
+        auto nn = ml::vec3{static_cast<float>(normal.x()) * thickness, static_cast<float>(normal.y()) * thickness, static_cast<float>(normal.z()) * thickness};
+        auto     outerPosition = mesh.vertices[i].positions + nn;
+
+        if(i-1 == 0 && startConnected){
+            normal = vertexMedianNormal(mesh.vertices.back().positions, mesh.vertices[i - 1].positions, mesh.vertices[i].positions);
+        } else if(i-1 == 0){
+            normal = vertexMedianNormal(mesh.vertices[i - 1].positions, mesh.vertices[i].positions);
+        } else {
+            normal = vertexMedianNormal(mesh.vertices[i - 2].positions, mesh.vertices[i - 1].positions, mesh.vertices[i].positions);
+        }
+        auto prevVertex = mesh.vertices[i - 1];
+        nn = ml::vec3{static_cast<float>(normal.x()) * thickness, static_cast<float>(normal.y()) * thickness, static_cast<float>(normal.z()) * thickness};
+        auto     prevOuterPosition = prevVertex.positions + nn;
+
+        mesh.vertices.push_back(Vertex{
+            prevVertex.positions, rgba{1.0f, 0.0f, 0.0f, 1.0f}, {}, {normal}, 0
+        });
+        mesh.vertices.push_back(Vertex{
+            prevOuterPosition, rgba{1.0f, 0.0f, 0.0f, 1.0f}, {}, {normal}, 0
+        });
+
+        mesh.vertices.push_back(Vertex{
+            mesh.vertices[i].positions, rgba{1.0f, 0.0f, 0.0f, 1.0f}, {}, {normal}, 0
+        });
+        mesh.vertices.push_back(Vertex{
+            outerPosition, rgba{1.0f, 0.0f, 0.0f, 1.0f}, {}, {normal}, 0
+        });
+
+        // Copy previous inner and outer vertex
+
+
+        Index innerVertexIndex = mesh.vertices.size() - 2;
+        Index prevInnerVertexIndex = mesh.vertices.size() - 4;
+
+        Index outerVertexIndex = mesh.vertices.size() - 1;
+        Index prevOuterVertexIndex = mesh.vertices.size() - 3;
+
+        Index indices[] = {
+            prevOuterVertexIndex, prevInnerVertexIndex, innerVertexIndex,
+            innerVertexIndex, outerVertexIndex, prevOuterVertexIndex
+        };
+        mesh.indices.insert(mesh.indices.end(), std::begin(indices), std::end(indices));
+    }
+    mesh.regenBuffers();
+}
+
+void addBorder2(Mesh& mesh, float thickness){
+    const int meshSize = mesh.vertices.size();
+	bool startConnected = startConnectedToEnd(mesh);
+    ml::vec3 currPos;
+	for(int i = 0; i < meshSize; i++){
+
+		ml::vec3 normal, prevNormal, prevPos;
+        if(i == 0 && startConnected){
+            prevNormal = vertexMedianNormal(mesh.vertices[meshSize - 1].positions, mesh.vertices.back().positions, mesh.vertices[i].positions);
+            normal = vertexMedianNormal(mesh.vertices.back().positions, mesh.vertices[i].positions, mesh.vertices[i + 1].positions);
+			prevPos = mesh.vertices.back().positions;
+        } else if(i == 0){
+            normal = vertexMedianNormal(mesh.vertices[i].positions, mesh.vertices[i + 1].positions);
+			continue;
+        } else {
+			prevNormal = normal;
+            prevPos = mesh.vertices[i - 1].positions;
+            normal = vertexMedianNormal(mesh.vertices[i - 1].positions, mesh.vertices[i].positions, mesh.vertices[i + 1].positions);
+        }
+        currPos = mesh.vertices[i].positions;
+        auto outerPosition = currPos + normal * thickness;
+		auto prevOuterPosition = prevPos + prevNormal * thickness;
+
+		// set border between current point and previous point
+        mesh.vertices.push_back(Vertex{
+            prevPos, rgba{1.0f, 0.0f, 0.0f, 1.0f}, {}, {normal}, 0
+        });
+        mesh.vertices.push_back(Vertex{
+            prevOuterPosition, rgba{1.0f, 0.0f, 0.0f, 1.0f}, {}, {normal}, 0
+        });
+
+        mesh.vertices.push_back(Vertex{
+            currPos, rgba{1.0f, 0.0f, 0.0f, 1.0f}, {}, {normal}, 0
+        });
+        mesh.vertices.push_back(Vertex{
+            outerPosition, rgba{1.0f, 0.0f, 0.0f, 1.0f}, {}, {normal}, 0
+        });
+
+        // Copy previous inner and outer vertex
+
+
+        Index innerVertexIndex = mesh.vertices.size() - 2;
+        Index prevInnerVertexIndex = mesh.vertices.size() - 4;
+
+        Index outerVertexIndex = mesh.vertices.size() - 1;
+        Index prevOuterVertexIndex = mesh.vertices.size() - 3;
+
+        Index indices[] = {
+            prevOuterVertexIndex, prevInnerVertexIndex, innerVertexIndex,
+            innerVertexIndex, outerVertexIndex, prevOuterVertexIndex
+        };
+        mesh.indices.insert(mesh.indices.end(), std::begin(indices), std::end(indices));
+
+	}
+    mesh.regenBuffers();
+}
+
+struct LinearEquation {
+	float a = 1, b = 0;
+};
+
+struct BezierCurve {
+	std::vector<Point> points;
+
+	void create() {
+
+	}
+};
+
+
+struct MyScene: Scene {
+	float xpos, ypos;
+	bool hasStart = false;
+
+	ml::vec2T<double> start;
+    ml::vec2T<double> end;
+    void onMouseMove(MouseMoveEvent e) {
+        xpos = e.xpos; ypos = e.ypos;
+    }
+	void onMouseClick(MouseClickEvent e) {
+        CoordinateMapper mapWindowToCoordinates = CoordinateMapper(createWindowCoordinates(window),
+                                                  CoordinateSystemBase{
+                                                      .xMin = -2.5,
+                                                      .xMax = 2.5,
+                                                      .yMin = -2,
+                                                      .yMax = 2
+                                                  });
+		if(e.button == MouseButton::Left) {
+			std::cout << window.height() << ", " << window.width() << std::endl;
+			std::cout << xpos << ", " << ypos << std::endl;
+            std::cout << mapWindowToCoordinates({xpos, ypos}) << std::endl;
+            if(!hasStart) {
+				start = mapWindowToCoordinates({xpos, ypos});
+				std::cout << "start" << start << std::endl;
+				hasStart = true;
+			} else {
+                end = mapWindowToCoordinates({xpos, ypos});
+                std::cout << "end" << end << std::endl;
+                auto line1 = Line{
+                    .start = ml::vec3{start, 0.0f},
+                    .end   = ml::vec3{end, 0.0f}
+				};
+                line1.fillColor       = Blue;
+                line1.borderThickness = 0.025f;
+                add(line1);
+				hasStart = false;
+			}
+
+		}
+	}
+
+	void setup() override {
+
+//		auto atr = Rectangle {
+//            .position = {2.0f, 2.0f},
+//			.height = 2.0f,
+//			.width = 3.0f
+//		};
+//		add(atr);
+//        auto atrr = Rectangle {
+//            .position = {2.0f, 2.0f},
+//            .height = 2.0f,
+//            .width = 3.0f
+//        };
+//		atrr.fillColor = Blue;
+//        atrr.scale(3.0f);
+//        add(atrr);
+
+		auto tr = Triangle{
+			.A = {-0.5f, -0.5f, 0.0f},
+			.B = {0.0f, 0.5f, 0.0f},
+			.C = {0.5f, -0.5f, 0.0f}};
+        tr.borderThickness = 0.02f;
+		tr.line[0].fillColor = Red;
+        tr.line[1].fillColor = Blue;
+        tr.line[2].fillColor = Yellow;
+		tr.fillColor = Blue;
+		tr.scale(3.0f);
+
+		add(tr);
+
+        auto circleA = Circle{
+            .center = scaledA,
+            .radius = 0.1f
+        };
+        auto circleB = Circle{
+            .center = scaledB,
+            .radius = 0.1f
+        };
+        auto circleC = Circle{
+            .center = scaledC,
+            .radius = 0.1f
+        };
+//		add(circleA);
+//        add(circleB);
+//        add(circleC);
+
+//		auto circle = Circle{
+//			.radius = 2.0f};
+        //        tr.rotate({0.0f, 0.0f, ml::radians(35.0f)});
+
+        //		tr.move(Left);
+        //		circle.move(Right);
+
+//		add(circle);
+
+		// -2.2...2.2
+//		auto line1 = Line{
+//			.start = Origin,
+//			.end   = Up};
+//		line1.fillColor       = Yellow;
+//		line1.borderThickness = 0.02f;
+//        {
+//		auto line2 = Line{
+//			.start = Origin,
+//			.end   = Left};
+//		line2.fillColor       = Red;
+//		line2.borderThickness = 0.02f;
+//		add(line2);
+//	}
+//
+////		auto a = Angle(line1, line2);
+////        a.radius = 0.02f;
+////        add(a);
+//        add(line1);
+        auto coordinate = CoordinateSystem();
+
+        for(float x = coordinate.xMin; x < coordinate.xMax; x += coordinate.xInterval) {
+            auto l = Line{
+                .start = ml::vec3(x, -5.0f, 0.0f),
+                .end = ml::vec3(x, 5.0f, 0.0f)
+            };
+            l.fillColor = Yellow;
+            l.borderThickness = 0.02f;
+
+//            l.create();
+			add(l);
+//            Shape::create(std::move(l.m_mesh));
+//            addMesh(std::move(l.m_mesh));
+//			std::cout << this->m_mesh.vertices.size() << std::endl;
+//            std::cout << this->m_mesh.indices.size() << std::endl;
+        }
+        for(float x = coordinate.xMin; x < coordinate.xMax; x += coordinate.xInterval) {
+            auto l = Line{
+                .start = ml::vec3(-10.0f, x, 0.0f),
+                .end = ml::vec3(10.0f, x, 0.0f)
+            };
+            l.fillColor = Yellow;
+            l.borderThickness = 0.02f;
+
+//            l.create();
+            add(l);
+//            Shape::create(std::move(l.m_mesh));
+//            addMesh(std::move(l.m_mesh));
+//			std::cout << this->m_mesh.vertices.size() << std::endl;
+//            std::cout << this->m_mesh.indices.size() << std::endl;
+        }
+
+		add(coordinate);
+//		coordinate(0, 0);
+		EventSystem::onMouseMove.connect<&MyScene::onMouseMove>(this);
+		EventSystem::onMouseClick.connect<&MyScene::onMouseClick>(this);
+
+	}
+};
+
+//#include <immintrin.h>
+
+/*
+ * Reflect(line)
+ * Reflect(point)
+ * Rotate(angle, Origin = Center_Origin)
+ * Translate(pointA, pointB)
+ * ==
+ * .isCongruent(other)
+ */
+
+
+#define SETUP_SCENE(SCENE_TYPE) \
+	SCENE_TYPE scene;\
+    scene.setup();\
+    while(scene.window.isOpen()) {\
+        scene.window.pollEvents();\
+        if(scene.window.keyIsPressed(Key::Q) || scene.window.keyIsPressed(Key::ESCAPE)) {\
+            scene.window.close();\
+        }\
+        scene.window.clear({0.05f, 0.05f, 0.05f, 1.0f});\
+        scene.update();\
+        scene.render();\
+        scene.window.display();\
+    }
+
+#include "plotting/tokenizer.h"
+#include "plotting/parser.h"
+#include "plotting/evaluation.h"
+#include "plotting/AST.h"
+
+
+void printTokens(std::ostream& os, std::queue<Token>& tokens){
+	std::queue<Token> temp = tokens;
+	while(!temp.empty()) {
+		os << temp.front() << std::endl;
+        temp.pop();
+	}
+}
+
+void eval(std::string& input){
+	auto tokens = tokenize(input);
+	printTokens(std::cout, tokens);
+	AST tree = parse(tokens);
+    printBT(std::cout, &tree);
+    auto result = interpret(tree);
+    std::cout << result << std::endl;
+
+}
+
+void REPL(){
+	std::string input;
+    do{
+		if(!input.empty())
+            eval(input);
+
+        std::cout << "> ";
+		getline(std::cin, input);
+//        std::cin >> input;
+        std::cout << std::endl;
+	} while(input != ":q");
+}
+
+
+int main() {
+////	__m256 evens = _mm256_set_ps(2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0);
+////	auto result = _mm256_add_ps(evens, evens);
+//
+//	MyScene scene;
+//	scene.setup();
+//	while(scene.window.isOpen()) {
+//		scene.window.pollEvents();
+//
+//		if(scene.window.keyIsPressed(Key::Q) || scene.window.keyIsPressed(Key::ESCAPE)) {
+//			scene.window.close();
+//		}
+//
+//		scene.window.clear({0.05f, 0.05f, 0.05f, 1.0f});
+////        scene.window.clear({0.95f, 0.95f, 0.95f, 1.0f});
+//		scene.update();
+//		scene.render();
+//		scene.window.display();
+//	}
+//    REPL();
+    SETUP_SCENE(MyScene);
+
+}
+

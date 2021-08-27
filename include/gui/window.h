@@ -32,6 +32,14 @@ namespace glpp {
 		inline static std::vector<GLFWwindow*> m_windows;
 		GLFWwindow*                            glfwWindow; // Window handle
 
+        /**
+         * Callback function that's called on window resize
+         * @param window to be called from when resizing
+         * @param width the new m_width
+         * @param height the new m_height
+         */
+        static void onWindowResizeCallback(GLFWwindow* window, int width, int height);
+
 		/* Callbacks: are triggered by GLFW, the callback functions dispatch their respective signal */
 		/**
          *
@@ -44,14 +52,14 @@ namespace glpp {
 		static void onKeyPressCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 		/**
-         * Callback function that's called on window resize
+         * Callback function that's called on framebuffer resize
          * @param window to be called from when resizing
          * @param width the new m_width
          * @param height the new m_height
          */
-		inline static void onResizeCallback(GLFWwindow* window, int width, int height);
+		inline static void onFramebufferResizeCallback(GLFWwindow* window, int width, int height);
 
-		/**
+        /**
          * Callback function that's called on mouse movement
          * Dispatch onMouseMove signal
          * @param window
@@ -91,6 +99,11 @@ namespace glpp {
          * @param state
          */
 		static void onCursorEnterCallback(GLFWwindow* window, int state);
+
+        void onResize(ResizeEvent event){
+            m_height = event.height;
+            m_width = event.width;
+        }
 
 	  public:
 		GLFWwindow* getGLFWwindow(){
@@ -170,9 +183,9 @@ namespace glpp {
 		/**
          * @return the aspect ratio
          */
-		float  aspect() { return m_width / m_height; }
-		size_t height() { return m_height; }
-		size_t width() { return m_width; }
+		float  aspect() const { return static_cast<float>(m_height) / static_cast<float>(m_width); }
+		size_t height() const { return m_height; }
+		size_t width() const { return m_width; }
 
 		void close();
 	};
@@ -200,15 +213,16 @@ namespace glpp {
         //glfwSwapInterval(1); // Enable vsync
 
 		if(drawPosition == DrawPosition::Relative) {
-			glfwSetFramebufferSizeCallback(glfwWindow, onResizeCallback);
+			glfwSetFramebufferSizeCallback(glfwWindow, onFramebufferResizeCallback);
 		}
 
-		if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-			std::cout << "Failed to initialize GLAD" << std::endl;
-		}
+        if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+            std::cout << "Failed to initialize GLAD" << std::endl;
+        }
 
-		// Set callbacks
-		glfwSetErrorCallback(onErrorCallback);
+        // Set callbacks
+        glfwSetWindowSizeCallback(glfwWindow, onWindowResizeCallback);
+        glfwSetErrorCallback(onErrorCallback);
 		glfwSetScrollCallback(glfwWindow, onMouseScrollCallback);
 		glfwSetCursorPosCallback(glfwWindow, onMouseMoveCallback);
 		glfwSetMouseButtonCallback(glfwWindow, onMouseClickCallback);
@@ -217,6 +231,9 @@ namespace glpp {
 
 		glfwSetInputMode(glfwWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 		m_windows.push_back(glfwWindow);
+
+
+		EventSystem::onWindowResize.connect<&Window::onResize>(this);
 	}
 
 	Window::~Window() {
@@ -290,10 +307,14 @@ namespace glpp {
 		EventSystem::cursorEvent = CursorEvent{{window}, static_cast<bool>(state)};
 		EventSystem::onCursorEnter(EventSystem::cursorEvent);
 	}
-	void Window::onResizeCallback(GLFWwindow* window, int width, int height) {
+	void Window::onFramebufferResizeCallback(GLFWwindow* window, int width, int height) {
 		glViewport(0, 0, width, height);
-		EventSystem::onResize(ResizeEvent{{window}, height, width});
+		EventSystem::onFramebufferResize(ResizeEvent{{window}, height, width});
 	}
+	void Window::onWindowResizeCallback(GLFWwindow* window, int width, int height) {
+		EventSystem::onWindowResize(ResizeEvent{{window}, height, width});
+	}
+
 } // namespace glpp
 
 #endif //LIBRARY_WINDOW_H

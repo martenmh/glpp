@@ -67,12 +67,13 @@ target_link_libraries(scene ${Libraries})
 add_executable(sorting examples/sorting.cpp ${ProjectFiles} ${ImguiFiles})
 target_link_libraries(sorting ${Libraries})
 
-include_directories(${GTEST_INCLUDE_DIRS})
+include_directories(${GTEST_INCLUDE_DIRS} include/ lib/ lib/stb_image lib/glad/include glfw ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIRS} ${ASSIMP_INCLUDE_DIRS} ${ImguiHeaders})
 
 add_executable(runTests test/tests.cpp)
-target_link_libraries(runTests ${GTEST_LIBRARIES} gtest_main)
-
-add_executable(runBench test/bench.cpp)
-target_link_libraries(runBench benchmark::benchmark)
+target_link_libraries(runTests ${Libraries} ${GTEST_LIBRARIES} gtest_main )
 
 
+include_directories(include/ lib/ lib/stb_image lib/glad/include glfw ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIRS} ${ASSIMP_INCLUDE_DIRS} ${ImguiHeaders})
+
+add_executable(runBench test/bench.cpp ${ProjectFiles} ${ImguiFiles})
+target_link_libraries(runBench PUBLIC benchmark::benchmark ${Libraries})

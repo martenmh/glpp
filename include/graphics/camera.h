@@ -6,6 +6,8 @@
 
 namespace glpp {
 
+
+
 	class Camera /*: public Transformable */ {
 	  protected:
 		ml::vec3 m_pos   = ml::vec3(0.0f, 0.0f, 0.0f);
@@ -240,6 +242,23 @@ namespace glpp {
 			}
 		}
 	};
+
+
+    class Observer2DCamera: public Camera {
+        Window&      m_window;
+
+        virtual void onKeyPress(KeyEvent& event) {
+        }
+
+      public:
+        Observer2DCamera(Window& window, float zoom):
+        Camera(window.width() / zoom, window.height() / zoom), m_window(window) {
+            EventSystem::onKeyPress.connect<&Observer2DCamera::onKeyPress>(this);
+        }
+		void update(){
+
+		}
+    };
 } // namespace gl
 
 #endif //CAMERA_H

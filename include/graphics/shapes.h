@@ -38,156 +38,156 @@ namespace glpp {
 	VertexIndexPair createCircle(const ml::vec3& center, float radius, int stacks, int segments);
 
 	/** ------------------------- 2 Dimensional Shapes ------------------------- **/
-	struct Triangle: public Drawable2D {
-		using Drawable2D::Drawable2D;
-		enum Side {
-			Left   = 0,
-			Middle = 10,
-			Right  = 20
-		};
-		Triangle(const ml::vec3& pos, const ml::vec2& size, rgba color, Side side = Middle, float textureID = 0.0f):
-			Drawable2D{{{{pos.x(), pos.y(), 0.0f}, color, {}, {0.0f, 0.0f}, textureID},
-						{{pos.x() + size.y(), pos.y(), 0.0f}, color, {}, {1.0f, 0.0f}, textureID},
-						{{pos.x() + size.x() * (static_cast<float>(side) / 10), pos.y() + size.y(), 0.0f}, color, {}, {0.5f, 1.0f}, textureID}},
-					   {0, 1, 2}} {}
-
-		Triangle(const std::array<ml::vec3, 3>& pos, rgba color, float textureID = 0.0f):
-			Drawable2D{{{{pos[0].x(), pos[0].y(), 0.0f}, color, {}, {0.0f, 0.0f}, textureID},
-						{{pos[1].x(), pos[1].y(), 0.0f}, color, {}, {1.0f, 0.0f}, textureID},
-						{{pos[2].x(), pos[2].y(), 0.0f}, color, {}, {0.5f, 1.0f}, textureID}},
-					   {0, 1, 2}} {}
-	};
-
-	struct Rectangle: public Drawable2D {
-		using Drawable2D::Drawable2D;
-
-		Rectangle(const ml::vec3& pos, const ml::vec2& size, rgba color, float textureID = 0.0f):
-			Drawable2D{createPlane(pos, size, color, textureID)} {
-		}
-	};
-
-	struct Curve: public Drawable2D {
-		using Drawable2D::Drawable2D;
-	};
-	struct BrezierCurve: public Curve {
-	};
-
-	struct HermiteCurve: public Curve {
-	};
-
-	struct ChaikinCurve: public Curve {
-	};
-
-	struct CubicBSplineCurve: public Curve {
-	};
-
-	struct ClampedCubicBSplineCurve: public Curve {
-	};
-
-	struct NurbsCurve: public Curve {
-	};
-
-	struct Line: public Drawable2D {
-	};
-
-	struct Circle: public Drawable2D {
-		using Drawable2D::Drawable2D;
-
-	  public:
-		Vertex center;
-		float  radius;
-		Circle(const ml::vec3 center, float radius, int segments):
-			Drawable2D{createCircle(center, radius, segments)} {
-		}
-	};
-
-	struct Polygon: public Drawable2D {
-		using Drawable2D::Drawable2D;
-	};
-
-	struct Polyline: public Drawable2D {
-		using Drawable2D::Drawable2D;
-	};
-	struct Path: public Drawable2D {
-		using Drawable2D::Drawable2D;
-
-		//void moveTo(const ml::vec3& );
-	};
-
-	/** ------------------------- 3 Dimensional Shapes ------------------------- **/
-	struct UVSphere: public Drawable3D {
-		using Drawable3D::Drawable3D;
-		UVSphere(const ml::vec3 center, float radius, int stacks, int segments, int texSlot = 1):
-			Drawable3D{createUVSphere(center, radius, stacks, segments, texSlot)} {
-		}
-	};
-
-	struct IcoSphere: public Drawable3D {
-		using Drawable3D::Drawable3D;
-		//IcoSphere
-	};
-
-	struct Cube: public Drawable3D {
-		using Drawable3D::Drawable3D;
-		Cube(const ml::vec3& pos, const ml::vec3& size, rgba color, float textureID):
-			Drawable3D(
-				{{{pos.x(), pos.y(), pos.z()}, color, {}, {0.0f, 0.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y(), pos.z()}, color, {}, {1.0f, 0.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z()}, color, {}, {1.0f, 1.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z()}, color, {}, {1.0f, 1.0f}, textureID},
-				 {{pos.x(), pos.y() + size.y(), pos.z()}, color, {}, {0.0f, 1.0f}, textureID},
-				 {{pos.x(), pos.y(), pos.z()}, color, {}, {0.0f, 0.0f}, textureID},
-				 {{pos.x(), pos.y(), pos.z() + size.z()}, color, {}, {0.0f, 0.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 1.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 1.0f}, textureID},
-				 {{pos.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {0.0f, 1.0f}, textureID},
-				 {{pos.x(), pos.y(), pos.z() + size.z()}, color, {}, {0.0f, 0.0f}, textureID},
-				 {{pos.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}, textureID},
-				 {{pos.x(), pos.y() + size.y(), pos.z()}, color, {}, {1.0f, 1.0f}, textureID},
-				 {{pos.x(), pos.y(), pos.z()}, color, {}, {0.0f, 1.0f}, textureID},
-				 {{pos.x(), pos.y(), pos.z() + size.z()}, color, {}, {0.0f, 1.0f}, textureID},
-				 {{pos.x(), pos.y(), pos.z()}, color, {}, {0.0f, 0.0f}, textureID},
-				 {{pos.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 1.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z()}, color, {}, {1.0f, 1.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y(), pos.z()}, color, {}, {0.0f, 1.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y(), pos.z()}, color, {}, {0.0f, 1.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y(), pos.z() + size.z()}, color, {}, {0.0f, 0.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}, textureID},
-				 {{pos.x(), pos.y(), pos.z()}, color, {}, {0.0f, 1.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y(), pos.z()}, color, {}, {1.0f, 1.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}, textureID},
-				 {{pos.x(), pos.y(), pos.z() + size.z()}, color, {}, {0.0f, 0.0f}, textureID},
-				 {{pos.x(), pos.y(), pos.z()}, color, {}, {0.0f, 1.0f}, textureID},
-				 {{pos.x(), pos.y() + size.y(), pos.z()}, color, {}, {0.0f, 1.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z()}, color, {}, {1.0f, 1.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}, textureID},
-				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}, textureID},
-				 {{pos.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {0.0f, 0.0f}, textureID},
-				 {{pos.x(), pos.y() + size.y(), pos.z()}, color, {}, {0.0f, 1.0}, textureID}},
-				{expand<unsigned int>(0, 36)}) {
-		}
-		Cube(const ml::vec3& pos, const ml::vec3& size, rgba color):
-			Drawable3D({{{pos.x(), pos.y(), pos.z()}, color, {}, {0.0f, 0.0f}},
-						{{pos.x() + size.x(), pos.y(), pos.z()}, color, {}, {1.0f, 0.0f}},
-						{{pos.x() + size.x(), pos.y() + size.y(), pos.z()}, color, {}, {1.0f, 1.0f}},
-						{{pos.x(), pos.y() + size.y(), pos.z()}, color, {}, {0.0f, 1.0f}},
-						{{pos.x(), pos.y(), pos.z() + size.z()}, color, {}, {0.0f, 1.0f}},
-						{{pos.x() + size.x(), pos.y(), pos.z() + size.z()}, color, {}, {1.0f, 1.0f}},
-						{{pos.x() + size.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}},
-						{{pos.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {0.0f, 0.0f}}},
-					   {{
-						   0, 1, 3, 1, 2, 3, // Back Quad
-						   0, 1, 4, 1, 5, 4, // Right Quad
-						   2, 3, 7, 2, 6, 7, // Left Quad
-						   4, 5, 7, 5, 6, 7, // Front Quad
-						   0, 3, 4, 3, 4, 7, // Top Quad
-						   1, 2, 5, 2, 5, 6  // Bottom Quad
-					   }}) {
-		}
-	};
+//	struct Triangle: public Drawable2D {
+//		using Drawable2D::Drawable2D;
+//		enum Side {
+//			Left   = 0,
+//			Middle = 10,
+//			Right  = 20
+//		};
+//		Triangle(const ml::vec3& pos, const ml::vec2& size, rgba color, Side side = Middle, float textureID = 0.0f):
+//			Drawable2D{{{{pos.x(), pos.y(), 0.0f}, color, {}, {0.0f, 0.0f}, textureID},
+//						{{pos.x() + size.y(), pos.y(), 0.0f}, color, {}, {1.0f, 0.0f}, textureID},
+//						{{pos.x() + size.x() * (static_cast<float>(side) / 10), pos.y() + size.y(), 0.0f}, color, {}, {0.5f, 1.0f}, textureID}},
+//					   {0, 1, 2}} {}
+//
+//		Triangle(const std::array<ml::vec3, 3>& pos, rgba color, float textureID = 0.0f):
+//			Drawable2D{{{{pos[0].x(), pos[0].y(), 0.0f}, color, {}, {0.0f, 0.0f}, textureID},
+//						{{pos[1].x(), pos[1].y(), 0.0f}, color, {}, {1.0f, 0.0f}, textureID},
+//						{{pos[2].x(), pos[2].y(), 0.0f}, color, {}, {0.5f, 1.0f}, textureID}},
+//					   {0, 1, 2}} {}
+//	};
+//
+//	struct Rectangle: public Drawable2D {
+//		using Drawable2D::Drawable2D;
+//
+//		Rectangle(const ml::vec3& pos, const ml::vec2& size, rgba color, float textureID = 0.0f):
+//			Drawable2D{createPlane(pos, size, color, textureID)} {
+//		}
+//	};
+//
+//	struct Curve: public Drawable2D {
+//		using Drawable2D::Drawable2D;
+//	};
+//	struct BrezierCurve: public Curve {
+//	};
+//
+//	struct HermiteCurve: public Curve {
+//	};
+//
+//	struct ChaikinCurve: public Curve {
+//	};
+//
+//	struct CubicBSplineCurve: public Curve {
+//	};
+//
+//	struct ClampedCubicBSplineCurve: public Curve {
+//	};
+//
+//	struct NurbsCurve: public Curve {
+//	};
+//
+//	struct Line: public Drawable2D {
+//	};
+//
+//	struct Circle: public Drawable2D {
+//		using Drawable2D::Drawable2D;
+//
+//	  public:
+//		Vertex center;
+//		float  radius;
+//		Circle(const ml::vec3 center, float radius, int segments):
+//			Drawable2D{createCircle(center, radius, segments)} {
+//		}
+//	};
+//
+//	struct Polygon: public Drawable2D {
+//		using Drawable2D::Drawable2D;
+//	};
+//
+//	struct Polyline: public Drawable2D {
+//		using Drawable2D::Drawable2D;
+//	};
+//	struct Path: public Drawable2D {
+//		using Drawable2D::Drawable2D;
+//
+//		//void moveTo(const ml::vec3& );
+//	};
+//
+//	/** ------------------------- 3 Dimensional Shapes ------------------------- **/
+//	struct UVSphere: public Drawable3D {
+//		using Drawable3D::Drawable3D;
+//		UVSphere(const ml::vec3 center, float radius, int stacks, int segments, int texSlot = 1):
+//			Drawable3D{createUVSphere(center, radius, stacks, segments, texSlot)} {
+//		}
+//	};
+//
+//	struct IcoSphere: public Drawable3D {
+//		using Drawable3D::Drawable3D;
+//		//IcoSphere
+//	};
+//
+//	struct Cube: public Drawable3D {
+//		using Drawable3D::Drawable3D;
+//		Cube(const ml::vec3& pos, const ml::vec3& size, rgba color, float textureID):
+//			Drawable3D(
+//				{{{pos.x(), pos.y(), pos.z()}, color, {}, {0.0f, 0.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y(), pos.z()}, color, {}, {1.0f, 0.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z()}, color, {}, {1.0f, 1.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z()}, color, {}, {1.0f, 1.0f}, textureID},
+//				 {{pos.x(), pos.y() + size.y(), pos.z()}, color, {}, {0.0f, 1.0f}, textureID},
+//				 {{pos.x(), pos.y(), pos.z()}, color, {}, {0.0f, 0.0f}, textureID},
+//				 {{pos.x(), pos.y(), pos.z() + size.z()}, color, {}, {0.0f, 0.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 1.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 1.0f}, textureID},
+//				 {{pos.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {0.0f, 1.0f}, textureID},
+//				 {{pos.x(), pos.y(), pos.z() + size.z()}, color, {}, {0.0f, 0.0f}, textureID},
+//				 {{pos.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}, textureID},
+//				 {{pos.x(), pos.y() + size.y(), pos.z()}, color, {}, {1.0f, 1.0f}, textureID},
+//				 {{pos.x(), pos.y(), pos.z()}, color, {}, {0.0f, 1.0f}, textureID},
+//				 {{pos.x(), pos.y(), pos.z() + size.z()}, color, {}, {0.0f, 1.0f}, textureID},
+//				 {{pos.x(), pos.y(), pos.z()}, color, {}, {0.0f, 0.0f}, textureID},
+//				 {{pos.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 1.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z()}, color, {}, {1.0f, 1.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y(), pos.z()}, color, {}, {0.0f, 1.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y(), pos.z()}, color, {}, {0.0f, 1.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y(), pos.z() + size.z()}, color, {}, {0.0f, 0.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}, textureID},
+//				 {{pos.x(), pos.y(), pos.z()}, color, {}, {0.0f, 1.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y(), pos.z()}, color, {}, {1.0f, 1.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}, textureID},
+//				 {{pos.x(), pos.y(), pos.z() + size.z()}, color, {}, {0.0f, 0.0f}, textureID},
+//				 {{pos.x(), pos.y(), pos.z()}, color, {}, {0.0f, 1.0f}, textureID},
+//				 {{pos.x(), pos.y() + size.y(), pos.z()}, color, {}, {0.0f, 1.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z()}, color, {}, {1.0f, 1.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}, textureID},
+//				 {{pos.x() + size.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}, textureID},
+//				 {{pos.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {0.0f, 0.0f}, textureID},
+//				 {{pos.x(), pos.y() + size.y(), pos.z()}, color, {}, {0.0f, 1.0}, textureID}},
+//				{expand<unsigned int>(0, 36)}) {
+//		}
+//		Cube(const ml::vec3& pos, const ml::vec3& size, rgba color):
+//			Drawable3D({{{pos.x(), pos.y(), pos.z()}, color, {}, {0.0f, 0.0f}},
+//						{{pos.x() + size.x(), pos.y(), pos.z()}, color, {}, {1.0f, 0.0f}},
+//						{{pos.x() + size.x(), pos.y() + size.y(), pos.z()}, color, {}, {1.0f, 1.0f}},
+//						{{pos.x(), pos.y() + size.y(), pos.z()}, color, {}, {0.0f, 1.0f}},
+//						{{pos.x(), pos.y(), pos.z() + size.z()}, color, {}, {0.0f, 1.0f}},
+//						{{pos.x() + size.x(), pos.y(), pos.z() + size.z()}, color, {}, {1.0f, 1.0f}},
+//						{{pos.x() + size.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {1.0f, 0.0f}},
+//						{{pos.x(), pos.y() + size.y(), pos.z() + size.z()}, color, {}, {0.0f, 0.0f}}},
+//					   {{
+//						   0, 1, 3, 1, 2, 3, // Back Quad
+//						   0, 1, 4, 1, 5, 4, // Right Quad
+//						   2, 3, 7, 2, 6, 7, // Left Quad
+//						   4, 5, 7, 5, 6, 7, // Front Quad
+//						   0, 3, 4, 3, 4, 7, // Top Quad
+//						   1, 2, 5, 2, 5, 6  // Bottom Quad
+//					   }}) {
+//		}
+//	};
 
 	struct Object {
 		//    std::vector<Vertex> vertices;
@@ -275,21 +275,96 @@ namespace glpp {
 		return {vertices, indices};
 	}
 
-	Mesh createTriangle(const ml::vec3& A, const ml::vec3& B, const ml::vec3& C, rgba color, float textureID = 0.0f){
-        return Mesh(VertexIndexPair{{{{A.x(), A.y(), A.z()}, color, {}, {0.0f, 0.0f}, textureID},
-                            {{B.x(), B.y(), B.z()}, color, {}, {1.0f, 0.0f}, textureID},
-                               {{C.x(), C.y(), C.z()}, color, {}, {0.5f, 1.0f}, textureID}},
-                        {0, 1, 2}});
+	Mesh createCircle(const ml::vec3& center, float radius, int segments, rgba color, float startRadians = 0.0f, float endRadians = M_2_PI){
+        rgba  col{1.0f, 1.0f, 1.0f, 1.0f};
+        Index maxI = 0;
+        std::vector<Vertex> vertices;
+        std::vector<Index> indices;
+
+        vertices.push_back({center, col, {}});
+            for(unsigned int i = 0; i <= segments; i++) {
+                float       theta = 2.0f * M_PI * float(i) / float(segments); // Angle
+                const float x     = sin(theta);
+                const float y     = cos(theta);
+                vertices.push_back({{center.x() + (radius * x), center.y() + (-radius * y), center.z()},
+                                    color,
+                                    {},
+                                    {x, y},
+                                    {}});
+                indices.insert(indices.end(), {maxI, maxI + i, maxI + i + 1});
+            }
 	}
+
+
+    ml::vec3 createNormal(const ml::vec3& A, const ml::vec3& B, const ml::vec3& C) {
+        /* Compute edge vectors */
+
+        auto x10 =  A.x();
+        auto y10 =  A.y();
+        auto z10 = A.z();
+        auto x00 = B.x();
+        auto y00 = B.y();
+        auto z00 = B.z();
+
+        auto x20 = C.x();
+        auto y20 = C.y();
+        auto z20 = C.z();
+
+        x10 = x10 - x00;
+        y10 = y10 - y00;
+        z10 = z10 - z00;
+        auto x12 = x10 - x20;
+        auto y12 = y10 - y20;
+        auto z12 = z10 - z20;
+
+        /* Compute the cross product */
+        auto cpx = (z10 * y12) - (y10 * z12);
+        auto cpy = (x10 * z12) - (z10 * x12);
+        auto cpz = (y10 * x12) - (x10 * y12);
+
+        /* Normalize the result to get the unit-length facet normal */
+        auto r = sqrt(cpx * cpx + cpy * cpy + cpz * cpz);
+        auto nx = cpx / r;
+        auto ny = cpy / r;
+        auto nz = cpz / r;
+        return {nx, ny, nz};
+    }
+
+
+    Mesh createTriangle(const ml::vec3& A, const ml::vec3& B, const ml::vec3& C, rgba color, float textureID = 0.0f) {
+        ml::vec3 aNormal = createNormal(A, B, C);
+        ml::vec3 bNormal = createNormal(B, A, C);
+        ml::vec3 cNormal = createNormal(C, B, A);
+        return Mesh(VertexIndexPair{{{{A.x(), A.y(), A.z()}, color, {aNormal}, {0.0f, 0.0f}, textureID},
+                                        {{B.x(), B.y(), B.z()}, color, {bNormal}, {1.0f, 0.0f}, textureID},
+                                           {{C.x(), C.y(), C.z()}, color, {cNormal}, {0.5f, 1.0f}, textureID}},
+                                    {0, 1, 2}});
+    }
 
     Mesh createPlane2(const ml::vec3& center, const ml::vec2& size, rgba color, float textureID) {
         return Mesh(VertexIndexPair({
-                                {{center.x() - size.x(), center.y() - size.y(), center.z()}, color, {}, {0.0f, 0.0f}, textureID},
-                                {{center.x() + size.x(), center.y() - size.y(), center.z()}, color, {}, {1.0f, 0.0f}, textureID},
-                                {{center.x() - size.x(), center.y() + size.y(), center.z()}, color, {}, {0.0f, 1.0f}, textureID},
-                                {{center.x() + size.x(), center.y() + size.y(), center.z()}, color, {}, {1.0f, 1.0f}, textureID}},
-                               {0, 1, 2, 2, 1, 3}));
+                                {{center.x() - size.x(), center.y() - size.y(), center.z()}, color, {-1, -1, 0}, {0.0f, 0.0f}, textureID},
+                                {{center.x() + size.x(), center.y() - size.y(), center.z()}, color, {1, -1, 0}, {1.0f, 0.0f}, textureID},
+                                {{center.x() + size.x(), center.y() + size.y(), center.z()}, color, {1, 1, 0}, {1.0f, 1.0f}, textureID},
+                                {{center.x() - size.x(), center.y() + size.y(), center.z()}, color, {-1, 1, 0}, {0.0f, 1.0f}, textureID}},
+                               {0, 1, 2, 2, 0, 3}));
     }
+
+	Mesh createRectangle(const ml::vec3& p1, const ml::vec3& p2, const ml::vec3& p3, const ml::vec3& p4, rgba color){
+        return Mesh(VertexIndexPair({
+                                        {p1, color, {-1, -1, 0}, {0.0f, 0.0f}, 0.0f},
+                                        {p2, color, {1, -1, 0}, {1.0f, 0.0f}, 0.0f},
+                                        {p3, color, {1, 1, 0}, {1.0f, 1.0f}, 0.0f},
+                                        {p4, color, {-1, 1, 0}, {0.0f, 1.0f}, 0.0f}},
+                                    {0, 1, 2, 2, 1, 3}));
+	}
+
+	Mesh createLine(const ml::vec3& start, const ml::vec3& end, rgba color){
+		return Mesh(VertexIndexPair({
+                                        {{start.x(), start.y(), start.z()}, color, {}, {0.0f, 0.0f}, 0.0f},
+                                        {{end.x(), end.y(), end.z()}, color, {}, {0.0f, 0.0f}, 0.0f}
+		}, {0, 1}));
+	}
 
 	VertexIndexPair createICOSphere(const ml::vec3& center, float radius, int stacks, int segments, int texSlot) {
 	}

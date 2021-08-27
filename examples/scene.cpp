@@ -138,7 +138,7 @@ int main() {
     ml::mat4 projection(1), view(1), model(1);
 
     RenderWindow<MyScene> window(width, height, "Engine");
-    Shader                        shader("/home/marten/projects/glpp/resources/default/shaders/mvp/");
+    Shader                        shader("/home/marten/projects/glpp/resources/default/shaders/scene_shaders/");
     Camera                        camera(100, 100);
 
     Mesh mesh3 = plane({-0.5f, -0.5f, -0.5f}, {100.0f, 100.0f}, {1.0f, 1.0f, 1.0f});
@@ -155,7 +155,7 @@ int main() {
         if(window.keyIsPressed(Key::Q) || window.keyIsPressed(Key::ESCAPE))
             window.close();
 
-        shader.setUniform("mvp", projection * view * model);
+        shader.setUniform("scene_shaders", projection * view * model);
         shader.use();
 
         model = ml::scale(0.4f);

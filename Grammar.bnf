@@ -1,0 +1,32 @@
+// Extended Becker-Naur Form of the grammar used by the Expression parser
+// + means one or more
+// * means zero or more
+program ::= expression | assignment
+
+expression ::= term {('+'|'-') term}    // Lowest precedence
+term ::= power {power | ('*'|'/') power}
+power ::= factor {'^' factor}
+factor ::= '(' expression ')'           // Highest precedence
+       | '|' expression '|'
+       | identifier expression
+       | integer
+       | float
+       | identifier
+
+integer ::= digit+ |
+        '-' digit+ // eg. 50621
+float ::= digit* '.' digit+ // eg. 5123.3 or .05
+
+assignment ::= identifier '=' expression
+reassignment ::= identifier ':=' expression
+
+identifier ::= letter
+       | letter+ '_' {letter | digit}+
+
+// Building blocks
+letter ::= ['a'...'Z']
+digit ::= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' |'8' | '9'
+
+// TODO: Function definitions
+// f : x -> x^2
+

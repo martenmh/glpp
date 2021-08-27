@@ -27,18 +27,19 @@ namespace glpp {
 	class Mesh {
 		unsigned int VBO{}, VAO{}, EBO{};
 
-	  public:
-		std::vector<Vertex>  vertices;
-		std::vector<Index>   indices;
-		std::vector<Texture> textures;
+      public:
+		void regenBuffers();
+        std::vector<Vertex>  vertices;
+        std::vector<Index>   indices;
+        std::vector<Texture> textures;
 
 		ml::vec3 center();
 
-		size_t indicesSize() {
+		size_t indicesSize() const {
 			return indices.size();
 		}
-		void setTexture(const Texture& texture) {
-			textures.push_back(texture);
+		void setTexture(Texture&& texture) {
+			textures.push_back(std::move(texture));
 		}
 
 		void setColor(rgba color){
@@ -47,46 +48,46 @@ namespace glpp {
 			}
 		}
 
+
+        void release(){
+			glASSERT(glDeleteVertexArrays(1, &VAO));
+			glASSERT(glDeleteBuffers(1, &VBO));
+			glASSERT(glDeleteBuffers(1, &EBO));
+		}
+
+        //Delete the copy constructor/assignment.
+        Mesh(const Mesh&) = delete;
+        Mesh& operator=(const Mesh&) = delete;
+
 		/**
 		 * Default constructor
 		 * Leaves the object in a unusable state
+		 * Use genBuffers to generate the necessary buffers
 		 */
 		Mesh()= default;
 
-        Mesh(const Mesh& mesh){
-			VAO = mesh.VAO;
-			VBO = mesh.VBO;
-			EBO = mesh.EBO;
-            vertices = mesh.vertices;
-            indices = mesh.indices;
-            textures = mesh.textures;
-		}
-
-        Mesh(Mesh&& mesh) noexcept {
-            VAO = mesh.VAO;
-            VBO = mesh.VBO;
-            EBO = mesh.EBO;
-            vertices = std::move(mesh.vertices);
-            indices = std::move(mesh.indices);
-            textures = std::move(mesh.textures);
+        Mesh(Mesh&& other) noexcept {
+            std::swap(VAO, other.VAO);
+            std::swap(VBO, other.VBO);
+            std::swap(EBO, other.EBO);
+            vertices = std::move(other.vertices);
+            indices = std::move(other.indices);
+            textures = std::move(other.textures);
         }
 
-        Mesh& operator=(const Mesh& mesh){
-            VAO = mesh.VAO;
-            VBO = mesh.VBO;
-            EBO = mesh.EBO;
-            vertices = mesh.vertices;
-            indices = mesh.indices;
-            textures = mesh.textures;
-		}
+        Mesh& operator=(Mesh&& other) noexcept {
+			if(this != &other){
+                std::cout << "Calling Mesh release" << std::endl;
+				release();
+				// VAO, VBO, EBO are now invalid
+				std::swap(VAO, other.VAO);
+                std::swap(VBO, other.VBO);
+                std::swap(EBO, other.EBO);
+                vertices = std::move(other.vertices);
+                indices = std::move(other.indices);
+                textures = std::move(other.textures);
+			}
 
-        Mesh& operator=(Mesh&& mesh) noexcept {
-            VAO = mesh.VAO;
-            VBO = mesh.VBO;
-            EBO = mesh.EBO;
-            vertices = std::move(mesh.vertices);
-            indices = std::move(mesh.indices);
-            textures = std::move(mesh.textures);
         }
 
         Mesh(std::vector<Vertex> vertices, std::vector<Index> indices, std::vector<Texture> textures) {
@@ -111,9 +112,7 @@ namespace glpp {
 		}
 		~Mesh() {
 			std::cout << "Calling Mesh destructor" << std::endl;
-//			glASSERT(glDeleteVertexArrays(1, &VAO));
-//			glASSERT(glDeleteBuffers(1, &VBO));
-//			glASSERT(glDeleteBuffers(1, &EBO));
+            release();
 		}
 		void bind() {
 			glASSERT(glBindVertexArray(VAO));
@@ -124,8 +123,9 @@ namespace glpp {
         bool operator==(const Mesh& rhs) const{
 			return VBO == rhs.VBO && VAO == rhs.VAO && EBO == rhs.EBO;
 		}
-	  private:
 		void genBuffers();
+
+	  private:
 		void loadFromFile(const std::filesystem::path& path) {
 		}
 	};
@@ -139,8 +139,8 @@ namespace glpp {
 		std::vector<Texture> textures;
 		ml::mat4             transformation;
 
-		void setTexture(const Texture& texture) {
-			textures.push_back(texture);
+		void setTexture(Texture&& texture) {
+			textures.push_back(std::move(texture));
 		}
 
 		VertexMesh(std::vector<Vertex> vertices_) {
@@ -165,13 +165,21 @@ namespace glpp {
 		void draw(Shader& shader) {
 		}
 
-	  private:
-		void genBuffers();
+        void genBuffers();
+      private:
 
 		void loadFromFile(const std::filesystem::path& path) {
 		}
 	};
-
+    void Mesh::regenBuffers() {
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), vertices.data(), GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Index) * indices.size(), indices.data(), GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+    }
 	void Mesh::genBuffers() {
 		glGenVertexArrays(1, &VAO);
 		glGenBuffers(1, &VBO);
@@ -179,9 +187,9 @@ namespace glpp {
 		glBindVertexArray(VAO);
 
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), vertices.data(), GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Index) * indices.size(), indices.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Index) * indices.size(), indices.data(), GL_DYNAMIC_DRAW);
 
 		// positions
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offset_of(&Vertex::positions));
@@ -243,13 +251,24 @@ namespace glpp {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
+
+        void drawLine(Mesh& mesh) {
+            mesh.bind();
+            glASSERT(glDrawElements(GL_LINE_STRIP, mesh.indicesSize(), GL_UNSIGNED_INT, 0));
+        }
+
         void draw(Mesh& mesh) {
             mesh.bind();
+			glPointSize(5.0f);
+//			glLineWidth(5.0f);
+//            glASSERT(glDrawElements(GL_POINTS, mesh.vertices.size(), GL_UNSIGNED_INT, 0));
+//            glASSERT(glDrawElements(GL_LINES, mesh.indicesSize(), GL_UNSIGNED_INT, 0));
 			glASSERT(glDrawElements(GL_TRIANGLES, mesh.indicesSize(), GL_UNSIGNED_INT, 0));
+//            glDrawArrays(GL_TRIANGLES, 0, 36);
         }
         void draw(VertexMesh& mesh) {
             mesh.bind();
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+            glDrawArrays(GL_LINE, 0, 36);
         }
         void render() {
         }
